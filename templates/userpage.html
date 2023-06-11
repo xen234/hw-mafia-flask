@@ -1,0 +1,32 @@
+<html>
+  <body>
+    <div>
+      <img src="{{ url_for('static', filename=data.filename) }}" alt="image">
+    </div>
+    <div>
+      <h1>{{ data.username }} data</h1>
+      <table>
+        <tr>
+          <th>Field</th>
+          <th>Value</th>
+        </tr>
+        <tr>
+          <td>Room Name</td>
+          <td>{{ data.room_name }}</td>
+        </tr>
+        <tr>
+          <td>Username</td>
+          <td>{{ data.username }}</td>
+        </tr>
+        <tr>
+          <td>Sex</td>
+          <td>{{ data.sex }}</td>
+        </tr>
+        <tr>
+          <td>Email</td>
+          <td>{{ data.email }}</td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

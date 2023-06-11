@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Upload Avatar</h2>
+    <form action="/set_avatar/room1/user1" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Upload">
+    </form>
+
+    <script>
+        function handleFormSubmit(event) {
+            event.preventDefault(); // Prevent the form from submitting normally
+
+            var form = event.target;
+            var formData = new FormData(form);
+
+            fetch('/set_avatar/room1/user1', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                console.log(result);
+            })
+            .catch(error => {
+                console.error(error);
+            });
+        }
+
+        var form = document.querySelector('form');
+        form.addEventListener('submit', handleFormSubmit);
+    </script>
+</body>
+</html>
