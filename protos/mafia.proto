@@ -28,6 +28,7 @@ service Mafia {
 
   rpc UserInfo (UserInfoRequest) returns (UserInfoResponse);
   rpc ChangeUserInfo (ChangeUserInfoRequest) returns (ChangeUserInfoResponse);
+  rpc ChangeOverallTime (ChangeOverallTimeRequest) returns (ChangeOverallTimeResponse);
   rpc RoomUsers (RoomUsersRequest) returns (RoomUsersResponse);
   rpc SetAvatar (SetAvatarRequest) returns (SetAvatarResponse);
 }
@@ -198,6 +199,9 @@ message UserInfoResponse {
   string gender = 3;
   string email = 4;
   string filename = 5;
+  string won = 6;
+  string lost = 7;
+  string overall_time = 8;
 }
 
 message ChangeUserInfoRequest {
@@ -229,4 +233,14 @@ message SetAvatarRequest {
 message SetAvatarResponse {
   bool flag = 1;
   optional string old_filename = 2;
+}
+
+message ChangeOverallTimeRequest{
+  string room_name = 1;
+  string username = 2;
+  string time = 3;
+}
+
+message ChangeOverallTimeResponse{
+  bool flag = 1;
 }
