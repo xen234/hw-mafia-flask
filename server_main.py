@@ -9,7 +9,6 @@ import grpc
 ## proto3 generated code
 import mafia_pb2
 import mafia_pb2_grpc
-import grpc
 from collections import defaultdict
 
 ## homemade code
@@ -44,6 +43,10 @@ class Member:
         self.gender = ''
         self.email = ''
         self.filename = ''
+        self.won = 0
+        self.lost = 0
+        self.overall_time = 0
+
 
     
 
@@ -201,6 +204,7 @@ class MafiaServicer(mafia_pb2_grpc.MafiaServicer):
                 assigned = roles.copy()
                 random.shuffle(assigned)
                 i = 0
+                self.rooms[request.room_name].room_status = ONGOING
                 for player in self.rooms[request.room_name].players:
                     self.rooms[request.room_name].assigned_roles[player] = assigned[i]
                     print(f'{request.username} MADE roles')
@@ -243,8 +247,23 @@ class MafiaServicer(mafia_pb2_grpc.MafiaServicer):
             return WIN_MAFIA
         print('HERE6')
         return ONGOING
+    
 
- 
+    async def victory_handler(self, room_name):
+        if self.rooms[room_name].room_status == WIN_MAFIA:
+            for player in self.rooms[room_name].players:
+                if self.rooms[room_name].roles[player] == ROLE_MAFIOSI:
+                    self.rooms[room_name].member_profiles[player].won += 1
+                else:
+                    self.rooms[room_name].member_profiles[player].lost += 1
+        elif self.rooms[room_name].room_status == WIN_INNOCENT:
+            for player in self.rooms[room_name].players:
+                if self.rooms[room_name].roles[player] != ROLE_MAFIOSI:
+                    self.rooms[room_name].member_profiles[player].won += 1
+                else:
+                    self.rooms[room_name].member_profiles[player].lost += 1
+        
+
 
     async def DayToNight(self, request, context):       
         #adding to queue 
@@ -275,6 +294,7 @@ class MafiaServicer(mafia_pb2_grpc.MafiaServicer):
 
                 status = await self.game_status(request.room_name)
                 self.rooms[request.room_name].room_status = status
+                await self.victory_handler(request.room_name)
 
                 self.rooms[request.room_name].sync_point.notify_all()
         else:
@@ -312,6 +332,7 @@ class MafiaServicer(mafia_pb2_grpc.MafiaServicer):
 
                 status = await self.game_status(request.room_name)
                 self.rooms[request.room_name].room_status = status
+                await self.victory_handler(request.room_name)
 
                 self.rooms[request.room_name].sync_point.notify_all()
         else:
@@ -325,6 +346,11 @@ class MafiaServicer(mafia_pb2_grpc.MafiaServicer):
             return mafia_pb2.NightToDayResponse(flag=True, victim=self.rooms[request.room_name].killed, message=self.rooms[request.room_name].room_status)
         print('survived2')
         return mafia_pb2.NightToDayResponse(flag=False, victim=self.rooms[request.room_name].killed, message=self.rooms[request.room_name].room_status)
+    
+
+    async def ChangeOverallTime(self, request, context):
+        self.rooms[request.room_name].member_profiles[request.username].overall_time += request.time
+        return mafia_pb2.ChangeOverallTimeResponse(flag=True)
 
 
     async def GetPlayers(self, request, context):
@@ -357,8 +383,9 @@ class MafiaServicer(mafia_pb2_grpc.MafiaServicer):
 
     async def UserInfo(self, request, context):
         member = self.rooms[request.room_name].member_profiles[request.username]
-        return mafia_pb2.UserInfoResponse(room_name = request.room_name, username = request.username, gender = member.gender,
-                                          email = member.email, filename = member.filename)
+        response = mafia_pb2.UserInfoResponse(room_name = request.room_name, username = request.username, gender = member.gender, email = member.email, filename = member.filename, won = str(member.won), lost = str(member.lost), overall_time = str(member.overall_time))
+        
+        return response
     
 
     async def ChangeUserInfo(self, request, context):

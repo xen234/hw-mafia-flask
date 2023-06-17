@@ -1,16 +1,25 @@
 import os
-
-from flask import Flask, render_template, flash, redirect, send_from_directory
+from rq import Queue
+from rq.job import Job
+import redis
+from flask import Flask, render_template, flash, redirect, send_from_directory, jsonify, send_file
 from flask import request as rq
 import grpc
 from werkzeug.utils import secure_filename
+from pdf_processing import *
 
 import mafia_pb2
 import mafia_pb2_grpc
 import uuid
 
+from threading import Thread
+import pdfkit
+from worker import conn
+
 
 app = Flask(__name__)
+task_queue = Queue(connection=conn)
+
 
 recommendations_host = os.getenv("RECOMMENDATIONS_HOST", "localhost")
 recommendations_channel = grpc.insecure_channel(
@@ -104,6 +113,50 @@ def display_file(room_name, user):
     request = mafia_pb2.UserInfoRequest(room_name = room_name, username = user)
     response = stub.UserInfo(request)
     return send_from_directory(app.config['UPLOAD_FOLDER'], response.filename)
+
+
+# PDF GENERATION AND QUEUE
+
+@app.route('/<room_name>/<user>/generate-pdf', methods=['POST'])
+def generate_pdf_endpoint(room_name, user):
+
+    request = mafia_pb2.UserInfoRequest(room_name = room_name, username = user)
+    response = stub.UserInfo(request)
+
+    task = {'room_name': room_name, 'username': user, 'gender' : response.gender, 'email' : response.email, 'won' : response.won, 
+            'lost' : response.lost, 'overall_time' : response.overall_time}
+    job = task_queue.enqueue(process_tasks, task)
+
+    return jsonify({'job_id': job.id}), 202
+
+
+@app.route('/jobs/<job_id>', methods=['GET'])
+def get_job_status(job_id):
+    job = Job.fetch(job_id, connection=conn)
+
+    if job is None:
+        return jsonify({'error': 'Invalid job ID'}), 404
+
+    if job.is_finished:
+        result = job.result
+        return jsonify(result), 200
+    elif job.is_failed:
+        return jsonify({'error': 'Failed to generate PDF'}), 500
+    else:
+        return jsonify({'status': 'in progress'}), 202
+    
+
+@app.route('/get_pdf/static/<pdf_file>', methods=['GET'])
+def get_pdf_document(pdf_file):
+    pdf_directory = 'static'
+
+    pdf_path = os.path.join(app.root_path, pdf_directory, pdf_file)
+
+    if not os.path.isfile(pdf_path):
+        return 'PDF file not found'
+
+    return send_from_directory(pdf_directory, pdf_file, as_attachment=True)
+    
 
 
 if __name__ == '__main__':

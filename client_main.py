@@ -18,8 +18,8 @@ from sys import argv
 BOT = 'bot'
 HUMAN = 'human'
 # Default Server Address For Testing
-host = '127.0.0.1'  # Или 'localhost'
-port = '50051'
+host = '127.0.0.1'  # 'localhost'
+port = '5000'
 
 
 ROLE_UNKNOWN = 'Unknown'
@@ -33,6 +33,8 @@ NIGHT = "Night"
 IN_PREPARATION = 0
 ONGOING = 1
 INVALID = 2
+
+import time
 
 
 class MafiaClient:
@@ -178,6 +180,12 @@ class MafiaClient:
             print(f'Player {victim} was murdered... F')
         self.players[victim] = ROLE_DEAD
         return
+    
+
+    async def handle_time(self, time):
+        response = await self.stub.ChangeOverallTime(mafia_pb2.ChangeOverallTimeRequest(room_name=self.room_name, username=self.username, time=time))
+        return response.flag
+
         
 
 
@@ -276,6 +284,7 @@ async def night_vote_handler(client, mode):
             
 async def mafia_game_function(client):
     print('Welcome to SoaMafiaGame! Lets begin :) \n')
+    start = time.time()
     await client.start()
 
     print(f'This time you are... {client.role}\n')
@@ -339,7 +348,10 @@ async def mafia_game_function(client):
             print(response.message)
             break
         # NIGHT VOTE RESULTSSSSS!!!!!!!!!!!!
-
+    
+    end = time.time()
+    await client.handle_time(end - start)
+    
     print('Restart program if you wanna play again! ')
     return
 
