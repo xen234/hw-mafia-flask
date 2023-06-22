@@ -40,6 +40,6 @@ docker-compose up
 
 Команды ниже создают задачу, и по мере ее выполнения возвращают job_id или ссылку на пдф документ. При переходе по ссылке загрузка должна начаться автоматически. Пример сгеренированного документа в папке static.
 ```
-curl -X POST http://127.0.0.1:5000/<room_id>/<user_id>/generate_pdf
-curl http://127.0.0.1:5000/jobs/<job_id>
+curl -X POST http://127.0.0.1:3001/<room_id>/<user_id>/generate_pdf
+curl http://127.0.0.1:3001/jobs/<job_id>
 ```
