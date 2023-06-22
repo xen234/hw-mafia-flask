@@ -9,6 +9,7 @@ import grpc
 ## proto3 generated code
 import mafia_pb2
 import mafia_pb2_grpc
+import grpc
 from collections import defaultdict
 
 ## homemade code

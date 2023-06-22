@@ -18,7 +18,7 @@ from sys import argv
 BOT = 'bot'
 HUMAN = 'human'
 # Default Server Address For Testing
-host = '127.0.0.1'  # 'localhost'
+host = '127.0.0.1'  # Или 'localhost'
 port = '5000'
 
 

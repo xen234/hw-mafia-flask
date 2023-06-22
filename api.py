@@ -123,8 +123,7 @@ def generate_pdf_endpoint(room_name, user):
     request = mafia_pb2.UserInfoRequest(room_name = room_name, username = user)
     response = stub.UserInfo(request)
 
-    task = {'room_name': room_name, 'username': user, 'gender' : response.gender, 'email' : response.email, 'won' : response.won, 
-            'lost' : response.lost, 'overall_time' : response.overall_time}
+    task = {'room_name': room_name, 'username': user, 'response': response}
     job = task_queue.enqueue(process_tasks, task)
 
     return jsonify({'job_id': job.id}), 202
@@ -132,7 +131,7 @@ def generate_pdf_endpoint(room_name, user):
 
 @app.route('/jobs/<job_id>', methods=['GET'])
 def get_job_status(job_id):
-    job = Job.fetch(job_id, connection=conn)
+    job = Job.fetch(job_id)
 
     if job is None:
         return jsonify({'error': 'Invalid job ID'}), 404
@@ -144,19 +143,7 @@ def get_job_status(job_id):
         return jsonify({'error': 'Failed to generate PDF'}), 500
     else:
         return jsonify({'status': 'in progress'}), 202
-    
 
-@app.route('/get_pdf/static/<pdf_file>', methods=['GET'])
-def get_pdf_document(pdf_file):
-    pdf_directory = 'static'
-
-    pdf_path = os.path.join(app.root_path, pdf_directory, pdf_file)
-
-    if not os.path.isfile(pdf_path):
-        return 'PDF file not found'
-
-    return send_from_directory(pdf_directory, pdf_file, as_attachment=True)
-    
 
 
 if __name__ == '__main__':
