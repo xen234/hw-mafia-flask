@@ -3,8 +3,7 @@ HW-4 Added frontend on flask for mafia game
 
 ## Запуск 
 ```
-docker-compose build
-docker-compose up
+docker-compose up --build
 ```
 Далее запускается клиент из консоли, создаете юзеров/комнату в игре и по адресам просматривается информация пользователей
 
