@@ -9,7 +9,6 @@ import grpc
 ## proto3 generated code
 import mafia_pb2
 import mafia_pb2_grpc
-import grpc
 from collections import defaultdict
 
 ## homemade code
@@ -426,6 +425,7 @@ async def serve(host, port) -> None:
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
     mafia_pb2_grpc.add_MafiaServicer_to_server(MafiaServicer(), server)
     listen_addr = "{}:{}".format(host, port)
+    
     server.add_insecure_port("0.0.0.0:50051")
     print("Running server...")
     await server.start()
